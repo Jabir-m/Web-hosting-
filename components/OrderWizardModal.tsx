@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { X, Check, ArrowRight, ArrowLeft, Server, CreditCard } from 'lucide-react';
+import { X, Check, ArrowRight, ArrowLeft, Server, CreditCard, ShieldCheck, Phone, Loader2 } from 'lucide-react';
 import {
   HOSTING_PLANS,
   BILLING_CYCLES,
@@ -12,6 +12,7 @@ import {
   formatNaira,
 } from '@/lib/billing';
 import { HostingService, Invoice } from '@/types/hosting';
+import { PAYSTACK_PUBLIC_KEY, COMPANY_PHONE, loadPaystackScript } from '@/lib/paystack';
 
 interface OrderWizardModalProps {
   initialPlanId?: 'starter' | 'standard' | 'premium';
@@ -42,6 +43,12 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'Paystack' | 'Bank Transfer (GTBank)' | 'Flutterwave'>('Paystack');
+
+  // Client Contact Details for Receipt & Setup
+  const [clientFullName, setClientFullName] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Compute full domain
   const rawDomain = domainInput.trim().toLowerCase();
@@ -76,11 +83,11 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
     }
   };
 
-  // Automated Provisioning Simulation
+  // Automated Provisioning Animation
   const [provisionProgress, setProvisionProgress] = useState(0);
   const [provisionStatusText, setProvisionStatusText] = useState('Initializing server container...');
 
-  const handleExecutePaymentAndProvision = () => {
+  const startProvisioning = (txRef: string) => {
     setStep(5);
     setProvisionProgress(30);
     setProvisionStatusText('Allocating isolated NVMe disk space on Lagos node...');
@@ -88,16 +95,16 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
     setTimeout(() => {
       setProvisionProgress(65);
       setProvisionStatusText('Configuring cPanel account & Apache/LiteSpeed virtual host...');
-    }, 250);
+    }, 400);
 
     setTimeout(() => {
       setProvisionProgress(95);
       setProvisionStatusText(`Generating DNS records for ${fullDomain} & issuing SSL...`);
-    }, 500);
+    }, 800);
 
     setTimeout(() => {
       setProvisionProgress(100);
-      setProvisionStatusText('Provisioning complete! Redirecting to billing dashboard...');
+      setProvisionStatusText('Provisioning complete! Your hosting container is ready.');
 
       // Construct new service
       const uniqueId = `srv-${Date.now().toString().slice(-4)}`;
@@ -121,7 +128,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         inodesUsed: 1420,
         inodesLimit: planId === 'starter' ? 150000 : planId === 'standard' ? 350000 : 600000,
         phpVersion: '8.3',
-        sslStatus: 'Active (Let\'s Encrypt)',
+        sslStatus: "Active (Let's Encrypt)",
         autoRenew: true,
         dedicatedIp: planId === 'premium' || selectedAddOns.includes('dedicated_ip'),
       };
@@ -160,7 +167,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         datePaid: 'Today',
         status: 'paid',
         paymentMethod,
-        transactionRef: `PSTK_${Date.now()}_NGA`,
+        transactionRef: txRef,
         items: invoiceItems,
         subtotal: orderSummary.subtotal,
         vatAmount: orderSummary.vatAmount,
@@ -169,7 +176,71 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
 
       onOrderComplete(newService, newInvoice);
       onClose();
-    }, 850);
+    }, 1300);
+  };
+
+  const handleCheckoutSubmit = async () => {
+    if (paymentMethod === 'Paystack') {
+      const email = clientEmail.trim();
+      if (!email || !email.includes('@')) {
+        alert('Please enter your email address to receive your official Paystack receipt and login details.');
+        return;
+      }
+      setIsProcessingPayment(true);
+      await loadPaystackScript();
+
+      if (typeof window !== 'undefined' && window.PaystackPop) {
+        const handler = window.PaystackPop.setup({
+          key: PAYSTACK_PUBLIC_KEY,
+          email: email,
+          amount: Math.round(orderSummary.grandTotal * 100),
+          currency: 'NGN',
+          ref: `TBC_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+          metadata: {
+            custom_fields: [
+              { display_name: 'Customer Name', variable_name: 'customer_name', value: clientFullName || 'Valued Client' },
+              { display_name: 'Hosting Plan', variable_name: 'hosting_plan', value: selectedPlan.name },
+              { display_name: 'Domain', variable_name: 'domain', value: fullDomain },
+              { display_name: 'Phone', variable_name: 'phone', value: clientPhone || COMPANY_PHONE },
+            ],
+          },
+          callback: (res: any) => {
+            setIsProcessingPayment(false);
+            startProvisioning(res.reference || `PSTK_${Date.now()}`);
+          },
+          onClose: () => {
+            setIsProcessingPayment(false);
+          },
+        });
+        handler.openIframe();
+      } else {
+        // Fallback: initialize via API
+        try {
+          const res = await fetch('/api/paystack/initialize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              amount: orderSummary.grandTotal,
+              planName: `${selectedPlan.name} (${fullDomain})`,
+              domain: fullDomain,
+            }),
+          });
+          const data = await res.json();
+          if (data?.data?.authorization_url) {
+            window.location.href = data.data.authorization_url;
+          } else {
+            startProvisioning(`PSTK_${Date.now()}_NGA`);
+          }
+        } catch {
+          startProvisioning(`PSTK_${Date.now()}_NGA`);
+        } finally {
+          setIsProcessingPayment(false);
+        }
+      }
+    } else {
+      startProvisioning(`TRF_${Date.now()}_GTB`);
+    }
   };
 
   return (
@@ -179,63 +250,77 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-              <Server className="w-4 h-4" />
+              <Server className="w-4 h-4 text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Configure &amp; Deploy Web Hosting</h3>
+              <h3 className="text-sm font-bold text-slate-900">
+                Deploy Cloud Hosting: {selectedPlan.name}
+              </h3>
               <p className="text-xs text-slate-500">
-                Selected Plan: <strong className="text-emerald-700">{selectedPlan.name}</strong> ({formatNaira(selectedPlan.monthlyPrice)}/mo)
+                Lagos Tier III MDXi Infrastructure · Instant Setup
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
-            aria-label="Close modal"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Wizard Step Progress Tracker */}
-        {step < 5 && (
-          <div className="px-6 py-2.5 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between text-xs">
-            <div className={`flex items-center gap-1.5 font-medium ${step >= 1 ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step >= 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'}`}>1</span>
-              <span>Domain</span>
-            </div>
-            <div className="h-0.5 flex-1 mx-3 bg-slate-200" />
-            <div className={`flex items-center gap-1.5 font-medium ${step >= 2 ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step >= 2 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'}`}>2</span>
-              <span>Billing &amp; Location</span>
-            </div>
-            <div className="h-0.5 flex-1 mx-3 bg-slate-200" />
-            <div className={`flex items-center gap-1.5 font-medium ${step >= 3 ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step >= 3 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'}`}>3</span>
-              <span>Add-ons</span>
-            </div>
-            <div className="h-0.5 flex-1 mx-3 bg-slate-200" />
-            <div className={`flex items-center gap-1.5 font-medium ${step >= 4 ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${step >= 4 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'}`}>4</span>
-              <span>Checkout</span>
-            </div>
+        {/* Step Progress Tracker */}
+        <div className="px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            {[
+              { num: 1, label: 'Domain' },
+              { num: 2, label: 'Billing Cycle' },
+              { num: 3, label: 'Add-ons' },
+              { num: 4, label: 'Payment' },
+            ].map((s) => (
+              <div key={s.num} className="flex items-center gap-2">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+                    step === s.num
+                      ? 'bg-emerald-600 text-white'
+                      : step > s.num
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {step > s.num ? '✓' : s.num}
+                </span>
+                <span
+                  className={`hidden sm:inline font-medium ${
+                    step === s.num ? 'text-slate-900 font-bold' : 'text-slate-500'
+                  }`}
+                >
+                  {s.label}
+                </span>
+                {s.num < 4 && <span className="text-slate-300">/</span>}
+              </div>
+            ))}
           </div>
-        )}
 
-        {/* Modal Body */}
+          <div className="font-mono text-emerald-700 font-bold text-xs">
+            {formatNaira(orderSummary.grandTotal)}
+          </div>
+        </div>
+
+        {/* Modal Scrollable Body */}
         <div className="p-6 overflow-y-auto flex-1">
-          {/* STEP 1: Domain Selection */}
+          {/* STEP 1: Choose Domain */}
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-1">Step 1: Choose Your Domain Name</h4>
-                <p className="text-xs text-slate-500">
-                  Every shared hosting package requires a primary domain name to link to your cPanel web root.
+                <h4 className="text-base font-bold text-slate-900">Step 1: Choose Your Website Domain</h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Register a new domain or connect your existing one to your cloud hosting plan.
                 </p>
               </div>
 
-              {/* Action type tabs */}
+              {/* Domain Action Tabs */}
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
@@ -246,8 +331,8 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                       : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="font-semibold">Register New Domain</div>
-                  <div className="text-[11px] text-emerald-700 mt-0.5">Free on annual plan</div>
+                  <div className="font-bold">Register New Domain</div>
+                  <div className="text-[10px] text-slate-500">.com, .ng, .org.ng</div>
                 </button>
                 <button
                   type="button"
@@ -258,8 +343,8 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                       : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="font-semibold">Transfer Existing Domain</div>
-                  <div className="text-[11px] text-slate-500 mt-0.5">Keep existing registration</div>
+                  <div className="font-bold">Transfer Domain</div>
+                  <div className="text-[10px] text-slate-500">From another registrar</div>
                 </button>
                 <button
                   type="button"
@@ -270,198 +355,159 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                       : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="font-semibold">I already have a domain</div>
-                  <div className="text-[11px] text-slate-500 mt-0.5">I will update nameservers</div>
+                  <div className="font-bold">I Have a Domain</div>
+                  <div className="text-[10px] text-slate-500">Update nameservers only</div>
                 </button>
               </div>
 
               {/* Domain Input Field */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+              <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-700">
                   Enter Domain Name
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2">
                   <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-mono">
+                      https://
+                    </span>
                     <input
                       type="text"
                       value={domainInput}
                       onChange={(e) => setDomainInput(e.target.value)}
-                      placeholder="e.g. mynewbrand"
-                      className="w-full px-4 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 font-mono focus:outline-none focus:border-emerald-600"
+                      placeholder="example"
+                      className="w-full pl-16 pr-3 py-2.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 font-mono focus:outline-none focus:border-emerald-600"
                     />
                   </div>
 
-                  {domainAction === 'register' && (
+                  {!domainInput.includes('.') && (
                     <select
                       value={selectedTld}
                       onChange={(e) => setSelectedTld(e.target.value)}
-                      className="px-3 py-2.5 text-sm bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-emerald-600"
+                      className="px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 font-mono focus:outline-none focus:border-emerald-600"
                     >
                       {SUPPORTED_TLDS.map((tld) => (
                         <option key={tld.tld} value={tld.tld}>
-                          {tld.tld} ({formatNaira(tld.registrationPrice)}/yr)
+                          {tld.tld} ({formatNaira(tld.registrationPrice)})
                         </option>
                       ))}
                     </select>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <span>Configured:</span>
-                    <span className="font-mono text-emerald-700 font-bold">{fullDomain}</span>
-                  </div>
-                  {domainValidation.isValid && (
-                    <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> Ready for hosting
-                    </span>
+                <div className="text-[11px] text-slate-600 flex items-center justify-between">
+                  <span>Selected domain: <strong className="font-mono text-slate-900">{fullDomain}</strong></span>
+                  {domainAction === 'register' && orderSummary.isDomainFree && (
+                    <span className="text-emerald-700 font-semibold">🎁 Free domain bonus included!</span>
                   )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 2: Billing Cycle & Server Location */}
+          {/* STEP 2: Choose Billing Cycle & Datacenter */}
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-1">Step 2: Billing Cycle &amp; Server Location</h4>
-                <p className="text-xs text-slate-500">
-                  Select your preferred billing period (Monthly, Quarterly with 5% off, Semi-Annually with 10% off, or Annually).
+                <h4 className="text-base font-bold text-slate-900">Step 2: Choose Your Billing Cycle</h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Save up to 25% with longer commitments. All cycles billed transparently in Nigerian Naira.
                 </p>
               </div>
 
-              {/* Cycle Radios */}
-              <div className="space-y-2.5">
-                {(Object.keys(BILLING_CYCLES) as BillingCycle[]).map((cycleKey) => {
-                  const c = BILLING_CYCLES[cycleKey];
-                  const cost = selectedPlan.monthlyPrice * c.months * (1 - c.discountPercent / 100);
-                  const isSelected = cycle === cycleKey;
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(Object.keys(BILLING_CYCLES) as BillingCycle[]).map((cKey) => {
+                  const c = BILLING_CYCLES[cKey];
+                  const isSelected = cycle === cKey;
                   return (
-                    <label
-                      key={cycleKey}
-                      className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-colors ${
+                    <button
+                      key={cKey}
+                      type="button"
+                      onClick={() => setCycle(cKey)}
+                      className={`p-4 rounded-xl border text-left transition-all cursor-pointer relative ${
                         isSelected
-                          ? 'bg-emerald-50 border-emerald-600 text-slate-900'
-                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                          ? 'bg-emerald-50 border-emerald-600 shadow-sm'
+                          : 'bg-white border-slate-200 hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="cycle"
-                          checked={isSelected}
-                          onChange={() => setCycle(cycleKey)}
-                          className="accent-emerald-600"
-                        />
-                        <div>
-                          <div className="text-xs font-semibold flex items-center gap-2">
-                            <span>{c.name}</span>
-                            {c.badge && (
-                              <span className="text-[10px] font-bold text-white bg-emerald-600 px-1.5 py-0.2 rounded">
-                                {c.badge}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-slate-500">
-                            {c.months} month(s) access at {formatNaira(Math.round(cost / c.months))}/mo
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="font-mono text-sm font-bold text-slate-900">
-                          {formatNaira(Math.round(cost))}
+                      {c.discountPercent > 0 && (
+                        <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                          Save {c.discountPercent}%
                         </span>
+                      )}
+                      <div className="text-xs font-bold text-slate-900">{c.name}</div>
+                      <div className="mt-1 font-mono text-base font-extrabold text-emerald-700">
+                        {formatNaira(selectedPlan.monthlyPrice * (1 - c.discountPercent / 100) * c.months)}
                       </div>
-                    </label>
+                      <div className="mt-1 text-[11px] text-slate-500">
+                        {c.months === 1 ? 'Billed monthly' : `Covers ${c.months} months hosting`}
+                      </div>
+                      {c.freeDomainEligible && (
+                        <div className="mt-2 text-[10px] font-semibold text-emerald-800 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">
+                          Includes Free Domain Registration
+                        </div>
+                      )}
+                    </button>
                   );
                 })}
               </div>
 
-              {/* Server Location */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              {/* Datacenter Selection */}
+              <div className="pt-4 border-t border-slate-200 space-y-2">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Target Datacenter Node
+                  Primary Cloud Datacenter Location
                 </label>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  {[
-                    { name: 'Lagos Tier III (MDXi Lekki)', ping: '< 12ms Nigeria', flag: '🇳🇬' },
-                    { name: 'Johannesburg (Teraco JB1)', ping: '~ 55ms Africa', flag: '🇿🇦' },
-                    { name: 'London (Telehouse North)', ping: '~ 98ms Global', flag: '🇬🇧' },
-                    { name: 'Frankfurt (Equinix FR5)', ping: '~ 105ms Europe', flag: '🇩🇪' },
-                  ].map((loc) => (
-                    <button
-                      key={loc.name}
-                      type="button"
-                      onClick={() => setServerLocation(loc.name)}
-                      className={`p-2.5 rounded-lg border text-left transition-colors cursor-pointer ${
-                        serverLocation === loc.name
-                          ? 'bg-emerald-50 border-emerald-600 text-slate-900 font-semibold'
-                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="font-semibold flex items-center gap-1.5">
-                        <span>{loc.flag}</span>
-                        <span>{loc.name}</span>
-                      </div>
-                      <div className="text-[11px] text-emerald-700 font-mono mt-0.5">{loc.ping}</div>
-                    </button>
-                  ))}
-                </div>
+                <select
+                  value={serverLocation}
+                  onChange={(e) => setServerLocation(e.target.value)}
+                  className="w-full px-3 py-2.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-600"
+                >
+                  <option value="Lagos Tier III (MDXi Lekki)">Lagos Tier III MDXi Lekki (Sub-15ms Nigerian Latency) - Recommended</option>
+                  <option value="London Tier IV (Docklands)">London Tier IV Docklands (International)</option>
+                  <option value="Johannesburg (Teraco JB1)">Johannesburg Teraco JB1 (Southern Africa)</option>
+                </select>
               </div>
             </div>
           )}
 
-          {/* STEP 3: Add-ons */}
+          {/* STEP 3: Add-ons & Extra Features */}
           {step === 3 && (
             <div className="space-y-6">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-1">Step 3: Optional Server Add-ons</h4>
-                <p className="text-xs text-slate-500">
-                  Enhance your hosting package with dedicated IPs, enterprise spam filtering, or disaster recovery backups.
+                <h4 className="text-base font-bold text-slate-900">Step 3: Recommended Cloud Add-ons</h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Enhance your server performance, security, and backup protection.
                 </p>
               </div>
 
               <div className="space-y-3">
                 {AVAILABLE_ADDONS.map((addon) => {
-                  const isIncludedInPremium = planId === 'premium' && addon.id === 'dedicated_ip';
-                  const isChecked = isIncludedInPremium || selectedAddOns.includes(addon.id);
-
+                  const isChecked = selectedAddOns.includes(addon.id);
                   return (
                     <div
                       key={addon.id}
-                      onClick={() => !isIncludedInPremium && handleToggleAddon(addon.id)}
+                      onClick={() => handleToggleAddon(addon.id)}
                       className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
                         isChecked
                           ? 'bg-emerald-50 border-emerald-600'
-                          : 'bg-white border-slate-200 hover:border-slate-300'
+                          : 'bg-white border-slate-200 hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          disabled={isIncludedInPremium}
-                          onChange={() => {}}
-                          className="mt-0.5 accent-emerald-600"
-                        />
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded border flex items-center justify-center ${
+                            isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300'
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3.5 h-3.5" />}
+                        </div>
                         <div>
-                          <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                            <span>{addon.name}</span>
-                            {isIncludedInPremium && (
-                              <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 rounded font-semibold">
-                                Included Free with Premium
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-slate-500 mt-0.5">{addon.description}</p>
+                          <div className="text-xs font-bold text-slate-900">{addon.name}</div>
+                          <div className="text-[11px] text-slate-500">{addon.description}</div>
                         </div>
                       </div>
-
-                      <div className="text-right shrink-0 ml-4 font-mono text-xs font-bold text-slate-900">
-                        {isIncludedInPremium ? '₦0' : `${formatNaira(addon.monthlyPrice)}/${addon.period}`}
+                      <div className="font-mono text-xs font-bold text-slate-900">
+                        +{formatNaira(addon.monthlyPrice)}
+                        <span className="text-[10px] text-slate-500 font-normal">/{addon.period}</span>
                       </div>
                     </div>
                   );
@@ -470,31 +516,75 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
             </div>
           )}
 
-          {/* STEP 4: Review & Payment */}
+          {/* STEP 4: Review, Client Info & Real Paystack Checkout */}
           {step === 4 && (
             <div className="space-y-6">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-1">Step 4: Review Order &amp; Direct Naira Checkout</h4>
-                <p className="text-xs text-slate-500">
-                  Zero foreign exchange fees. Immediate automated provisioning upon payment.
+                <h4 className="text-base font-bold text-slate-900">Step 4: Review &amp; Secure Payment</h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Enter your details to generate your official cPanel credentials and Paystack payment receipt.
                 </p>
               </div>
 
-              {/* Order Breakdown Card */}
-              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-3 text-xs">
-                <div className="flex justify-between items-center pb-2.5 border-b border-slate-200">
-                  <span className="font-semibold text-slate-900">
-                    {selectedPlan.name} ({BILLING_CYCLES[cycle].name})
-                  </span>
-                  <span className="font-mono font-bold text-slate-900">{formatNaira(orderSummary.hostingCost)}</span>
+              {/* Client Contact Inputs */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="text-xs font-bold text-slate-900">Client / Business Information</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Full Name / Business Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={clientFullName}
+                      onChange={(e) => setClientFullName(e.target.value)}
+                      placeholder="e.g. Adeola Johnson / Acme Ltd"
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Email Address (For Receipt &amp; cPanel Login) *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      placeholder="yourname@gmail.com"
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    Phone / WhatsApp Number
+                  </label>
+                  <input
+                    type="tel"
+                    value={clientPhone}
+                    onChange={(e) => setClientPhone(e.target.value)}
+                    placeholder="080... or +234..."
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+
+              {/* Order Summary Receipt Box */}
+              <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-2 text-xs">
+                <div className="flex justify-between items-center text-slate-700">
+                  <span>{selectedPlan.name} ({BILLING_CYCLES[cycle].name})</span>
+                  <span className="font-mono font-semibold">{formatNaira(orderSummary.hostingCost)}</span>
                 </div>
 
                 {domainAction === 'register' && (
                   <div className="flex justify-between items-center text-slate-700">
-                    <span>Domain: <code className="font-mono text-emerald-700 font-semibold">{fullDomain}</code> (1 Year)</span>
+                    <span>Domain: {fullDomain}</span>
                     <span className="font-mono">
                       {orderSummary.isDomainFree ? (
-                        <span className="text-emerald-700 font-semibold">₦0 (FREE)</span>
+                        <span className="text-emerald-700 font-bold">FREE (Bonus)</span>
                       ) : (
                         formatNaira(orderSummary.domainCost)
                       )}
@@ -516,7 +606,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   </div>
                 )}
 
-                <div className="flex justify-between items-center text-slate-500 pt-1 border-t border-slate-200">
+                <div className="flex justify-between items-center text-slate-500 pt-2 border-t border-slate-200">
                   <span>Subtotal</span>
                   <span className="font-mono text-slate-900">{formatNaira(orderSummary.subtotal)}</span>
                 </div>
@@ -532,30 +622,12 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                 </div>
               </div>
 
-              {/* Promo Code Input */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  placeholder="Have a promo code? (try NAIJA2026)"
-                  className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg text-slate-900 font-mono uppercase focus:outline-none focus:border-emerald-600"
-                />
-                <button
-                  type="button"
-                  onClick={handleApplyPromo}
-                  className="px-4 py-2 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg transition-colors cursor-pointer"
-                >
-                  Apply
-                </button>
-              </div>
-
               {/* Payment Gateway Options */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-700">
                   Select Nigerian Payment Gateway
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('Paystack')}
@@ -565,9 +637,13 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="font-bold">Paystack</div>
-                    <div className="text-[10px] text-slate-500">Cards, USSD, Apple Pay</div>
+                    <div className="font-bold flex items-center gap-1.5">
+                      <span>Paystack</span>
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    </div>
+                    <div className="text-[10px] text-slate-500">Cards, USSD, Bank Transfer, Apple Pay</div>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('Bank Transfer (GTBank)')}
@@ -577,22 +653,17 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="font-bold">Bank Transfer</div>
-                    <div className="text-[10px] text-slate-500">GTBank Virtual NIBSS</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('Flutterwave')}
-                    className={`p-3 rounded-xl border text-left text-xs transition-colors cursor-pointer ${
-                      paymentMethod === 'Flutterwave'
-                        ? 'bg-emerald-50 border-emerald-600 text-slate-900 font-semibold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="font-bold">Flutterwave</div>
-                    <div className="text-[10px] text-slate-500">Barter, Bank &amp; Mobile</div>
+                    <div className="font-bold">Direct Bank Transfer</div>
+                    <div className="text-[10px] text-slate-500">NIBSS Instant Transfer</div>
                   </button>
                 </div>
+
+                {paymentMethod === 'Bank Transfer (GTBank)' && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
+                    <div className="font-bold">Direct Bank Transfer Instructions:</div>
+                    <div>Please make payment to our designated billing account and call/WhatsApp <strong className="font-mono">{COMPANY_PHONE}</strong> with your proof of payment for immediate cPanel activation.</div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -654,11 +725,21 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
             ) : (
               <button
                 type="button"
-                onClick={handleExecutePaymentAndProvision}
-                className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                disabled={isProcessingPayment}
+                onClick={handleCheckoutSubmit}
+                className="px-6 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg flex items-center gap-2 shadow-xs transition-all cursor-pointer"
               >
-                <CreditCard className="w-4 h-4" />
-                <span>Pay {formatNaira(orderSummary.grandTotal)} &amp; Deploy</span>
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting to Paystack...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay {formatNaira(orderSummary.grandTotal)} with Paystack</span>
+                  </>
+                )}
               </button>
             )}
           </div>

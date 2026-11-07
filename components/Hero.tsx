@@ -1,7 +1,8 @@
 'use client';
 import React, { useState } from 'react';
-import { ArrowRight, CheckCircle2, Search, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Search, Zap, MessageCircle } from 'lucide-react';
 import { validateDomainInput } from '@/lib/billing';
+import { COMPANY_PHONE, WHATSAPP_LINK } from '@/lib/paystack';
 
 interface HeroProps {
   onSearchDomain: (domain: string) => void;
@@ -119,10 +120,16 @@ export const Hero: React.FC<HeroProps> = ({ onSearchDomain, onSelectPlan }) => {
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Daily Automated JetBackups</span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>24/7 Lagos WhatsApp &amp; NOC Support</span>
-              </div>
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:text-emerald-700 transition-colors"
+                title="Chat with Lagos NOC Engineer"
+              >
+                <MessageCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>WhatsApp Support: {COMPANY_PHONE}</span>
+              </a>
             </div>
           </div>
 

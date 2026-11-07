@@ -1,13 +1,14 @@
 'use client';
 import React from 'react';
-import { Server, Mail, Phone, MapPin } from 'lucide-react';
+import { Server, Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { COMPANY_PHONE, COMPANY_PHONE_RAW, WHATSAPP_LINK } from '@/lib/paystack';
 
 interface FooterProps {
-  onGoToDashboard: () => void;
+  onGoToDashboard?: () => void;
   onSelectPlan: (planId: 'starter' | 'standard' | 'premium') => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onGoToDashboard, onSelectPlan }) => {
+export const Footer: React.FC<FooterProps> = ({ onSelectPlan }) => {
   return (
     <footer className="bg-slate-50 border-t border-slate-200 text-slate-600 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -25,14 +26,26 @@ export const Footer: React.FC<FooterProps> = ({ onGoToDashboard, onSelectPlan })
             <p className="text-xs text-slate-600 leading-relaxed max-w-sm">
               Nigeria's fastest Tier III cloud hosting platform. Delivering enterprise NVMe SSD shared hosting, cloud VPS, and .ng domain registrations directly billed in Nigerian Naira.
             </p>
-            <div className="space-y-1.5 text-xs text-slate-600 pt-1">
+            <div className="space-y-2 text-xs text-slate-600 pt-1">
               <div className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>Admiralty Way, Lekki Phase 1, Lagos, Nigeria</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>+234 (1) 234-5678 · WhatsApp NOC: +234 803 456 7890</span>
+                <a href={`tel:${COMPANY_PHONE_RAW}`} className="hover:text-emerald-700 font-bold text-slate-800">
+                  {COMPANY_PHONE}
+                </a>
+                <span className="text-slate-300">·</span>
+                <a
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-700 text-emerald-700 font-semibold inline-flex items-center gap-1"
+                >
+                  <MessageCircle className="w-3 h-3" />
+                  WhatsApp
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -78,7 +91,7 @@ export const Footer: React.FC<FooterProps> = ({ onGoToDashboard, onSelectPlan })
               </li>
               <li>
                 <a href="#pricing" className="hover:text-emerald-700 transition-colors">
-                  cPanel Reseller Hosting
+                  cPanel Shared Hosting
                 </a>
               </li>
             </ul>
@@ -94,56 +107,48 @@ export const Footer: React.FC<FooterProps> = ({ onGoToDashboard, onSelectPlan })
               <li><a href="#domain-checker" className="hover:text-emerald-700 transition-colors">Register .org.ng (₦20,000)</a></li>
               <li><a href="#domain-checker" className="hover:text-emerald-700 transition-colors">Register .com.ng (₦3,500)</a></li>
               <li><a href="#domain-checker" className="hover:text-emerald-700 transition-colors">Register .ng Domain</a></li>
-              <li><a href="#features" className="hover:text-emerald-700 transition-colors">Free Let's Encrypt SSL</a></li>
+              <li><a href="#features" className="hover:text-emerald-700 transition-colors">Free Let&apos;s Encrypt SSL</a></li>
               <li><a href="#infrastructure" className="hover:text-emerald-700 transition-colors">MDXi Lagos Network Status</a></li>
             </ul>
           </div>
 
-          {/* Client Portal & Billing */}
+          {/* 24/7 Support Hotline */}
           <div>
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
-              Client Portal
+              Customer Support
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               <li>
-                <button
-                  onClick={onGoToDashboard}
-                  className="hover:text-emerald-700 transition-colors text-left text-emerald-700 font-semibold cursor-pointer"
+                <a
+                  href={`tel:${COMPANY_PHONE_RAW}`}
+                  className="hover:text-emerald-700 font-bold text-slate-900 flex items-center gap-1.5"
                 >
-                  Client Billing Dashboard →
-                </button>
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Call: {COMPANY_PHONE}</span>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={onGoToDashboard}
-                  className="hover:text-emerald-700 transition-colors text-left cursor-pointer"
+                <a
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-emerald-700 font-semibold text-emerald-700 flex items-center gap-1.5"
                 >
-                  Pay Invoices (Paystack / Trf)
-                </button>
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>WhatsApp: {COMPANY_PHONE}</span>
+                </a>
               </li>
-              <li>
-                <button
-                  onClick={onGoToDashboard}
-                  className="hover:text-emerald-700 transition-colors text-left cursor-pointer"
-                >
-                  Open Support Ticket
-                </button>
+              <li className="text-slate-500 pt-1">
+                <span>Working Hours: 24/7 NOC Active Monitoring</span>
               </li>
-              <li>
-                <button
-                  onClick={onGoToDashboard}
-                  className="hover:text-emerald-700 transition-colors text-left cursor-pointer"
-                >
-                  Manage DNS &amp; Nameservers
-                </button>
+              <li className="text-slate-500">
+                <span>Lagos Tier III MDXi Lekki Facility</span>
               </li>
-              <li>
-                <button
-                  onClick={onGoToDashboard}
-                  className="hover:text-emerald-700 transition-colors text-left cursor-pointer"
-                >
-                  One-Click cPanel SSO
-                </button>
+              <li className="pt-2">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  All Systems Operational
+                </span>
               </li>
             </ul>
           </div>
@@ -153,11 +158,18 @@ export const Footer: React.FC<FooterProps> = ({ onGoToDashboard, onSelectPlan })
         <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 text-slate-600 text-[11px]">
             <span className="font-semibold text-slate-800">Accepted Naira Gateways:</span>
-            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">Paystack</span>
-            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">Flutterwave</span>
-            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">Verve Cards</span>
-            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">Naira Mastercard / Visa</span>
-            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">NIBSS Instant Transfer</span>
+            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">
+              Paystack
+            </span>
+            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">
+              Verve Cards
+            </span>
+            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">
+              Naira Mastercard / Visa
+            </span>
+            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">
+              NIBSS Instant Transfer
+            </span>
           </div>
 
           <div className="text-[11px] text-slate-500">

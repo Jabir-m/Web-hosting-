@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { Check, ArrowRight, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { Check, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   HOSTING_PLANS,
   BILLING_CYCLES,
@@ -66,17 +66,6 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
               🎁 Annual plan bonus: Includes a free .com.ng or .ng domain registration for the first year!
             </div>
           )}
-
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <a
-              href="#client-agreement"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-emerald-800 bg-emerald-100/70 hover:bg-emerald-200/70 border border-emerald-300 transition-colors shadow-2xs"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Client Scope &amp; Non-Dispute Terms</span>
-              <span className="text-[10px] bg-white px-1.5 py-0.5 rounded text-emerald-700 font-bold">Printable SLA</span>
-            </a>
-          </div>
         </div>
 
         {/* Pricing Cards Grid */}

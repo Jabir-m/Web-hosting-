@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Navbar } from './Navbar';
 import { Hero } from './Hero';
 import { PricingSection } from './PricingSection';
-import { HostingScopePolicy } from './HostingScopePolicy';
 import { DomainChecker } from './DomainChecker';
 import { InfrastructureSection } from './InfrastructureSection';
 import { FeaturesBento } from './FeaturesBento';
@@ -222,8 +221,6 @@ export default function App() {
           <PricingSection
             onSelectPlan={(planId) => handleOpenOrderWizard(planId)}
           />
-          {/* Client Scope Transparency & Zero-Dispute SLA Agreement */}
-          <HostingScopePolicy />
           <DomainChecker
             onSelectDomainForHosting={(domain) => handleOpenOrderWizard('standard', domain)}
           />

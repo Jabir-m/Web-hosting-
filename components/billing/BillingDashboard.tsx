@@ -20,7 +20,6 @@ import { formatNaira } from '@/lib/billing';
 import { CPanelModal } from './CPanelModal';
 import { InvoiceViewModal } from './InvoiceViewModal';
 import { PaystackCheckoutModal } from './PaystackCheckoutModal';
-import { ClientAgreementModal } from '../ClientAgreementModal';
 
 interface BillingDashboardProps {
   services: HostingService[];
@@ -61,8 +60,6 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
   const [selectedServiceForCPanel, setSelectedServiceForCPanel] = useState<HostingService | null>(null);
   const [selectedInvoiceForView, setSelectedInvoiceForView] = useState<Invoice | null>(null);
   const [selectedInvoiceForPay, setSelectedInvoiceForPay] = useState<Invoice | null>(null);
-  const [showAgreementModal, setShowAgreementModal] = useState(false);
-  const [agreementPlanId, setAgreementPlanId] = useState<'starter' | 'standard' | 'premium'>('standard');
 
   // New Ticket State
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
@@ -476,16 +473,6 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => {
-                    setAgreementPlanId('standard');
-                    setShowAgreementModal(true);
-                  }}
-                  className="px-3.5 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg hover:bg-emerald-100 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Client SLA Agreement</span>
-                </button>
-                <button
                   onClick={onOpenOrderWizard}
                   className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
@@ -538,17 +525,6 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         className="px-3.5 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
                       >
                         DNS Zone
-                      </button>
-                      <button
-                        onClick={() => {
-                          setAgreementPlanId(srv.planId);
-                          setShowAgreementModal(true);
-                        }}
-                        className="px-3 py-2 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="View or print official hosting contract for this client domain"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Client SLA</span>
                       </button>
                     </div>
                   </div>
@@ -1197,12 +1173,6 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
           </div>
         </div>
       )}
-      {/* MODAL 6: Client Scope Agreement & SLA */}
-      <ClientAgreementModal
-        isOpen={showAgreementModal}
-        onClose={() => setShowAgreementModal(false)}
-        selectedPlanId={agreementPlanId}
-      />
     </div>
   );
 };
