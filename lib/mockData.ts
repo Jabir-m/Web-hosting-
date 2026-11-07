@@ -1,0 +1,216 @@
+import { HostingService, Invoice, RegisteredDomain, SupportTicket, UserProfile } from '@/types/hosting';
+
+export const INITIAL_USER_PROFILE: UserProfile = {
+  name: 'Jabir Mustafa Sulaiman',
+  email: 'jabirmustafasulaiman@gmail.com',
+  phone: '+234 803 456 7890',
+  companyName: 'Apex Digital Solutions Ltd',
+  address: 'Block 12, Admiralty Way, Lekki Phase 1',
+  city: 'Lagos',
+  state: 'Lagos State',
+  country: 'Nigeria',
+  walletBalance: 35000,
+};
+
+export const INITIAL_SERVICES: HostingService[] = [
+  {
+    id: 'srv-standard-01',
+    planId: 'standard',
+    planName: 'Standard Plan',
+    domain: 'lagosboutique.com.ng',
+    status: 'active',
+    monthlyPrice: 12000,
+    billingCycle: 'annually',
+    nextDueDate: '2027-04-15',
+    serverLocation: 'Lagos Tier III (MDXi Lekki)',
+    ipAddress: '102.164.120.88',
+    cpanelUsername: 'lagosbtq',
+    diskUsedGB: 18.4,
+    diskLimitGB: 60,
+    bandwidthUsedGB: 46.2,
+    bandwidthLimitGB: 0, // unlimited
+    inodesUsed: 42100,
+    inodesLimit: 250000,
+    phpVersion: '8.3',
+    sslStatus: 'Active (Let\'s Encrypt)',
+    autoRenew: true,
+    dedicatedIp: false,
+  },
+  {
+    id: 'srv-premium-02',
+    planId: 'premium',
+    planName: 'Premium Plan',
+    domain: 'paypilot.ng',
+    status: 'active',
+    monthlyPrice: 15000,
+    billingCycle: 'monthly',
+    nextDueDate: '2026-11-28',
+    serverLocation: 'Lagos Tier III (MDXi Lekki)',
+    ipAddress: '102.164.120.45',
+    cpanelUsername: 'paypilot',
+    diskUsedGB: 41.2,
+    diskLimitGB: 150,
+    bandwidthUsedGB: 128.5,
+    bandwidthLimitGB: 0,
+    inodesUsed: 94000,
+    inodesLimit: 500000,
+    phpVersion: '8.3',
+    sslStatus: 'Active (PositiveSSL)',
+    autoRenew: true,
+    dedicatedIp: true,
+  },
+];
+
+export const INITIAL_INVOICES: Invoice[] = [
+  {
+    id: 'inv-104',
+    invoiceNumber: 'INV-2026-104',
+    dateCreated: '2026-11-01',
+    dateDue: '2026-11-15',
+    status: 'unpaid',
+    items: [
+      {
+        description: 'Starter Plan - Shared Web Hosting (1 Month) for mynewproject.com.ng',
+        amount: 7500,
+      },
+      {
+        description: '.com.ng Domain Name Registration (1 Year) - mynewproject.com.ng',
+        amount: 3500,
+      },
+    ],
+    subtotal: 11000,
+    vatAmount: 825,
+    total: 11825,
+  },
+  {
+    id: 'inv-089',
+    invoiceNumber: 'INV-2026-089',
+    dateCreated: '2026-10-28',
+    dateDue: '2026-10-28',
+    datePaid: '2026-10-28',
+    status: 'paid',
+    paymentMethod: 'Paystack',
+    transactionRef: 'PSTK_98124018274_LAG',
+    items: [
+      {
+        description: 'Premium Plan - High-Performance Cloud Hosting (1 Month) - paypilot.ng',
+        amount: 15000,
+      },
+    ],
+    subtotal: 15000,
+    vatAmount: 1125,
+    total: 16125,
+  },
+  {
+    id: 'inv-042',
+    invoiceNumber: 'INV-2026-042',
+    dateCreated: '2026-04-15',
+    dateDue: '2026-04-15',
+    datePaid: '2026-04-15',
+    status: 'paid',
+    paymentMethod: 'Bank Transfer (GTBank)',
+    transactionRef: 'NIBSS_TRF_490182740',
+    items: [
+      {
+        description: 'Standard Plan - Annual Shared Hosting (12 Months) - lagosboutique.com.ng',
+        amount: 120000,
+      },
+      {
+        description: 'Free .com.ng Domain Registration (Annual Benefit promo)',
+        amount: 0,
+      },
+    ],
+    subtotal: 120000,
+    vatAmount: 9000,
+    total: 129000,
+  },
+];
+
+export const INITIAL_DOMAINS: RegisteredDomain[] = [
+  {
+    id: 'dom-01',
+    domainName: 'lagosboutique.com.ng',
+    registrationDate: '2025-04-15',
+    expiryDate: '2027-04-15',
+    status: 'active',
+    autoRenew: true,
+    whoisPrivacy: true,
+    nameservers: ['ns1.techbuilders.cloud', 'ns2.techbuilders.cloud'],
+    dnsRecords: [
+      { id: 'dns-1', type: 'A', name: '@', value: '102.164.120.88', ttl: 3600 },
+      { id: 'dns-2', type: 'CNAME', name: 'www', value: 'lagosboutique.com.ng', ttl: 3600 },
+      { id: 'dns-3', type: 'MX', name: '@', value: 'mail.lagosboutique.com.ng', ttl: 3600, priority: 10 },
+      { id: 'dns-4', type: 'TXT', name: '@', value: 'v=spf1 include:_spf.techbuilders.cloud ~all', ttl: 3600 },
+    ],
+  },
+  {
+    id: 'dom-02',
+    domainName: 'paypilot.ng',
+    registrationDate: '2025-11-28',
+    expiryDate: '2026-11-28',
+    status: 'active',
+    autoRenew: true,
+    whoisPrivacy: true,
+    nameservers: ['ns1.techbuilders.cloud', 'ns2.techbuilders.cloud'],
+    dnsRecords: [
+      { id: 'dns-5', type: 'A', name: '@', value: '102.164.120.45', ttl: 1800 },
+      { id: 'dns-6', type: 'CNAME', name: 'api', value: 'paypilot.ng', ttl: 1800 },
+      { id: 'dns-7', type: 'MX', name: '@', value: 'mail.paypilot.ng', ttl: 3600, priority: 10 },
+    ],
+  },
+];
+
+export const INITIAL_TICKETS: SupportTicket[] = [
+  {
+    id: 'tik-9023',
+    ticketNumber: 'TK-9023',
+    subject: 'Requesting Redis Object Cache activation on WordPress',
+    department: 'Technical Support',
+    priority: 'Medium',
+    status: 'answered',
+    serviceAffected: 'Standard Plan - lagosboutique.com.ng',
+    lastUpdated: '2 hours ago',
+    messages: [
+      {
+        id: 'msg-1',
+        sender: 'Jabir Mustafa Sulaiman',
+        senderRole: 'client',
+        timestamp: 'Today at 09:15 AM',
+        message: 'Hello Support team, we noticed high traffic on our WooCommerce checkout and would like Redis Object Cache activated on the LiteSpeed server for lagosboutique.com.ng.',
+      },
+      {
+        id: 'msg-2',
+        sender: 'Oladipo Adeleke (Lagos NOC Lead)',
+        senderRole: 'support',
+        timestamp: 'Today at 09:42 AM',
+        message: 'Hello Jabir, thank you for reaching out! We have provisioned a dedicated Redis daemon socket at /var/run/redis/lagosbtq.sock with 256MB memory cap. You can now enable the LiteSpeed Cache Redis connection directly in your WordPress wp-admin settings. Latency to the socket is sub-0.5ms.',
+      },
+    ],
+  },
+  {
+    id: 'tik-8910',
+    ticketNumber: 'TK-8910',
+    subject: 'Assistance with Nigerian Bank Transfer auto-confirmation',
+    department: 'Billing & Accounts',
+    priority: 'Low',
+    status: 'closed',
+    serviceAffected: 'Invoice INV-2026-089',
+    lastUpdated: 'Oct 29, 2026',
+    messages: [
+      {
+        id: 'msg-3',
+        sender: 'Jabir Mustafa Sulaiman',
+        senderRole: 'client',
+        timestamp: 'Oct 28, 2026 at 11:20 AM',
+        message: 'Hi, paid via GTBank transfer to the Moniepoint virtual account. Can you verify receipt?',
+      },
+      {
+        id: 'msg-4',
+        sender: 'Amina Bello (Accounts Officer)',
+        senderRole: 'support',
+        timestamp: 'Oct 28, 2026 at 11:35 AM',
+        message: 'Payment received via NIBSS instant settlement and confirmed! Invoice INV-2026-089 is marked Paid and the service is renewed.',
+      },
+    ],
+  },
+];
