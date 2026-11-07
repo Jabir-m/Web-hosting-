@@ -10,11 +10,11 @@ interface FaqItem {
 const FAQS: FaqItem[] = [
   {
     q: 'How do I pay in Nigerian Naira (₦)? Are dollar cards required?',
-    a: 'No international dollar cards or virtual dollar cards are required! We accept all Nigerian payment methods directly via Paystack and Flutterwave, including Verve, Naira Mastercard, Visa, USSD banking codes (*737#, *966#, etc.), and instant Bank Transfer to our dedicated NIBSS virtual bank account with immediate automated order activation.',
+    a: 'No international dollar cards or virtual dollar cards are required! We accept all Nigerian payment methods directly via Paystack, including Verve, Naira Mastercard, Visa, USSD banking codes (*737#, *966#, etc.), with immediate automated order activation.',
   },
   {
     q: 'What is the difference between Starter (₦7,500), Standard (₦12,000), and Premium (₦15,000)?',
-    a: 'Starter (₦7,500/mo) is tailored for 1 website with 20GB NVMe storage and 5 business emails. Standard (₦12,000/mo) supports Unlimited websites, 60GB NVMe storage, 4GB RAM, daily automated backups, and includes a free .com.ng domain on annual plans. Premium (₦15,000/mo) delivers 150GB NVMe storage, 8GB RAM, 4 CPU cores, and includes a Dedicated IPv4 Address and free .ng or .com.ng domain.',
+    a: 'Starter (₦7,500/mo) is tailored for 1 website with 20GB NVMe storage and 5 business emails. Standard (₦12,000/mo) supports Unlimited websites, 60GB NVMe storage, 4GB RAM, and daily automated backups. Premium (₦15,000/mo) delivers 150GB NVMe storage, 8GB RAM, 4 CPU cores, and includes a Dedicated IPv4 Address.',
   },
   {
     q: 'Can you migrate my existing website from Namecheap, GoDaddy, or Whogohost?',

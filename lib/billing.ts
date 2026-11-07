@@ -49,7 +49,6 @@ export const BILLING_CYCLES: Record<BillingCycle, BillingCycleConfig> = {
     name: 'Quarterly (3 Mo)',
     months: 3,
     discountPercent: 5,
-    badge: 'Save 5%',
     freeDomainEligible: false,
   },
   'semi-annually': {
@@ -57,16 +56,14 @@ export const BILLING_CYCLES: Record<BillingCycle, BillingCycleConfig> = {
     name: 'Semi-Annually (6 Mo)',
     months: 6,
     discountPercent: 10,
-    badge: 'Save 10%',
     freeDomainEligible: false,
   },
   'annually': {
     id: 'annually',
     name: 'Annually (12 Mo)',
     months: 12,
-    discountPercent: 0, // Discount removed as requested
-    badge: 'Free Domain',
-    freeDomainEligible: true,
+    discountPercent: 0,
+    freeDomainEligible: false,
   },
 };
 

@@ -140,7 +140,7 @@ export const PaystackCheckoutModal: React.FC<PaystackCheckoutModalProps> = ({
                     <span>Instant Automated Activation</span>
                   </div>
                   <p>
-                    Supports Nigerian Debit Cards (Mastercard, Visa, Verve), Direct Bank Transfer, and USSD.
+                    Supports Nigerian Debit Cards (Mastercard, Visa, Verve), Paystack Bank Transfer, and USSD.
                   </p>
                 </div>
               </div>

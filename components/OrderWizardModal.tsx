@@ -42,7 +42,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'Paystack' | 'Bank Transfer (GTBank)' | 'Flutterwave'>('Paystack');
+  const [paymentMethod, setPaymentMethod] = useState<'Paystack'>('Paystack');
 
   // Client Contact Details for Receipt & Setup
   const [clientFullName, setClientFullName] = useState('');
@@ -394,11 +394,8 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   )}
                 </div>
 
-                <div className="text-[11px] text-slate-600 flex items-center justify-between">
-                  <span>Selected domain: <strong className="font-mono text-slate-900">{fullDomain}</strong></span>
-                  {domainAction === 'register' && orderSummary.isDomainFree && (
-                    <span className="text-emerald-700 font-semibold">🎁 Free domain bonus included!</span>
-                  )}
+                <div className="text-[11px] text-slate-600">
+                  Selected domain: <strong className="font-mono text-slate-900">{fullDomain}</strong>
                 </div>
               </div>
             </div>
@@ -410,7 +407,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
               <div>
                 <h4 className="text-base font-bold text-slate-900">Step 2: Choose Your Billing Cycle</h4>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Save up to 25% with longer commitments. All cycles billed transparently in Nigerian Naira.
+                  Choose your preferred billing cycle. All packages billed in Nigerian Naira.
                 </p>
               </div>
 
@@ -429,11 +426,6 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                           : 'bg-white border-slate-200 hover:bg-slate-50'
                       }`}
                     >
-                      {c.discountPercent > 0 && (
-                        <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
-                          Save {c.discountPercent}%
-                        </span>
-                      )}
                       <div className="text-xs font-bold text-slate-900">{c.name}</div>
                       <div className="mt-1 font-mono text-base font-extrabold text-emerald-700">
                         {formatNaira(selectedPlan.monthlyPrice * (1 - c.discountPercent / 100) * c.months)}
@@ -441,11 +433,6 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                       <div className="mt-1 text-[11px] text-slate-500">
                         {c.months === 1 ? 'Billed monthly' : `Covers ${c.months} months hosting`}
                       </div>
-                      {c.freeDomainEligible && (
-                        <div className="mt-2 text-[10px] font-semibold text-emerald-800 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">
-                          Includes Free Domain Registration
-                        </div>
-                      )}
                     </button>
                   );
                 })}
@@ -625,45 +612,22 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
               {/* Payment Gateway Options */}
               <div className="space-y-2">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Select Nigerian Payment Gateway
+                  Nigerian Payment Gateway
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('Paystack')}
-                    className={`p-3 rounded-xl border text-left text-xs transition-colors cursor-pointer ${
-                      paymentMethod === 'Paystack'
-                        ? 'bg-emerald-50 border-emerald-600 text-slate-900 font-semibold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="font-bold flex items-center gap-1.5">
-                      <span>Paystack</span>
+                <div className="p-3.5 rounded-xl border bg-emerald-50 border-emerald-600 text-slate-900">
+                  <div className="font-bold flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span>Paystack Live Gateway</span>
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                     </div>
-                    <div className="text-[10px] text-slate-500">Cards, USSD, Bank Transfer, Apple Pay</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('Bank Transfer (GTBank)')}
-                    className={`p-3 rounded-xl border text-left text-xs transition-colors cursor-pointer ${
-                      paymentMethod === 'Bank Transfer (GTBank)'
-                        ? 'bg-emerald-50 border-emerald-600 text-slate-900 font-semibold'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="font-bold">Direct Bank Transfer</div>
-                    <div className="text-[10px] text-slate-500">NIBSS Instant Transfer</div>
-                  </button>
-                </div>
-
-                {paymentMethod === 'Bank Transfer (GTBank)' && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
-                    <div className="font-bold">Direct Bank Transfer Instructions:</div>
-                    <div>Please make payment to our designated billing account and call/WhatsApp <strong className="font-mono">{COMPANY_PHONE}</strong> with your proof of payment for immediate cPanel activation.</div>
+                    <span className="text-[10px] text-emerald-700 bg-white px-2 py-0.5 rounded font-semibold border border-emerald-200">
+                      Instant Automated Activation
+                    </span>
                   </div>
-                )}
+                  <div className="text-[11px] text-slate-600 mt-1">
+                    Accepts Naira Debit Cards (Mastercard, Visa, Verve), USSD (*737#, *966#), Apple Pay, and Direct Transfer.
+                  </div>
+                </div>
               </div>
             </div>
           )}

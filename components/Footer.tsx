@@ -167,9 +167,6 @@ export const Footer: React.FC<FooterProps> = ({ onSelectPlan }) => {
             <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">
               Naira Mastercard / Visa
             </span>
-            <span className="px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700 shadow-2xs">
-              NIBSS Instant Transfer
-            </span>
           </div>
 
           <div className="text-[11px] text-slate-500">

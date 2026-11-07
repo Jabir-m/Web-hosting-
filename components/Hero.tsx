@@ -45,7 +45,7 @@ export const Hero: React.FC<HeroProps> = ({ onSearchDomain, onSelectPlan }) => {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
-              Host your website locally in our Lagos Tier III data center with sub-15ms Nigerian latency. Pay seamlessly in Naira via Paystack, Flutterwave, or Bank Transfer. Starter from <strong className="text-emerald-700 font-mono font-semibold">₦7,500/mo</strong>, Standard at <strong className="text-emerald-700 font-mono font-semibold">₦12,000/mo</strong>, and Premium at <strong className="text-emerald-700 font-mono font-semibold">₦15,000/mo</strong>.
+              Host your website locally in our Lagos Tier III data center with sub-15ms Nigerian latency. Pay seamlessly in Naira via Paystack. Starter from <strong className="text-emerald-700 font-mono font-semibold">₦7,500/mo</strong>, Standard at <strong className="text-emerald-700 font-mono font-semibold">₦12,000/mo</strong>, and Premium at <strong className="text-emerald-700 font-mono font-semibold">₦15,000/mo</strong>.
             </p>
 
             {/* Interactive Domain Search Form */}
@@ -102,7 +102,7 @@ export const Hero: React.FC<HeroProps> = ({ onSearchDomain, onSelectPlan }) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-700 font-medium">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Free .com.ng Domain on Annual</span>
+                <span>Instant NVMe &amp; cPanel Setup</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -192,7 +192,7 @@ export const Hero: React.FC<HeroProps> = ({ onSearchDomain, onSelectPlan }) => {
               </div>
               <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                 <div className="text-xs text-slate-500">Local Payment</div>
-                <div className="text-base font-bold text-slate-900">Paystack / Trf</div>
+                <div className="text-base font-bold text-slate-900">Paystack (₦)</div>
               </div>
             </div>
           </div>

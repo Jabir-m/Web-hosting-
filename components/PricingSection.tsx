@@ -48,24 +48,10 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                   }`}
                 >
                   <span>{cycle.name}</span>
-                  {cycle.discountPercent > 0 && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        isSelected ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      }`}
-                    >
-                      -{Math.round(cycle.discountPercent)}%
-                    </span>
-                  )}
                 </button>
               );
             })}
           </div>
-          {BILLING_CYCLES[selectedCycle].freeDomainEligible && (
-            <div className="mt-3 text-xs text-emerald-700 font-semibold">
-              🎁 Annual plan bonus: Includes a free .com.ng or .ng domain registration for the first year!
-            </div>
-          )}
         </div>
 
         {/* Pricing Cards Grid */}
@@ -114,12 +100,7 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
 
                     {selectedCycle !== 'monthly' && (
                       <div className="mt-1 text-xs text-slate-500 font-mono">
-                        Billed {formatNaira(cost.finalTotal)} for {BILLING_CYCLES[selectedCycle].months} months{' '}
-                        {cost.discountAmount > 0 && (
-                          <span className="text-emerald-700 font-medium">
-                            (Saved {formatNaira(cost.discountAmount)})
-                          </span>
-                        )}
+                        Billed {formatNaira(cost.finalTotal)} for {BILLING_CYCLES[selectedCycle].months} months
                       </div>
                     )}
                   </div>
@@ -262,12 +243,6 @@ export const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan }) 
                   <td className="py-3 px-4">Weekly Snapshots</td>
                   <td className="py-3 px-4 text-emerald-700 font-semibold">Daily JetBackups</td>
                   <td className="py-3 px-4">Daily Continuous (30-day retention)</td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-4 font-medium text-slate-900">Free Domain on Annual</td>
-                  <td className="py-3 px-4 text-slate-400">Not included</td>
-                  <td className="py-3 px-4 text-emerald-700 font-bold">Free .com.ng</td>
-                  <td className="py-3 px-4 text-emerald-700 font-bold">Free .ng or .com.ng</td>
                 </tr>
                 <tr>
                   <td className="py-3 px-4 font-medium text-slate-900">Control Panel</td>

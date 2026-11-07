@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden sm:inline text-slate-600">Pure Enterprise NVMe SSD · 99.9% SLA Guarantee</span>
           </div>
           <div className="flex items-center gap-4 text-slate-600 text-xs">
-            <span className="hidden md:inline">Instant Paystack &amp; Bank Transfer in Naira (₦)</span>
+            <span className="hidden md:inline">Instant Paystack Checkout in Naira (₦)</span>
             <a
               href={`tel:${COMPANY_PHONE_RAW}`}
               className="hover:text-emerald-700 font-bold transition-colors flex items-center gap-1.5 text-slate-800"
